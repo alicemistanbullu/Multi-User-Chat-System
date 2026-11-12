@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Server Monitoring</title>
+</head>
+<body>
+    <h1>Chat Server Monitoring</h1>
+
+    <h3>Connected Users: <span id="users">0</span></h3>
+    <h3>Processed Messages: <span id="messages">0</span></h3>
+
+    <h2>Live Events</h2>
+    <div id="events"></div>
+
+    <script>
+        const ws = new WebSocket("ws://" + location.hostname + ":8765");
+
+        const users = document.getElementById("users");
+        const messages = document.getElementById("messages");
+        const events = document.getElementById("events");
+
+        ws.onopen = () => {
+            console.log("Monitoring connected.");
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.users !== undefined) {
+                users.textContent = data.users;
+            }
+
+            if (data.messages !== undefined) {
+                messages.textContent = data.messages;
+            }
+
+            if (data.type !== "stats") {
+                const div = document.createElement("div");
+
+                div.textContent =
+                    "[" + data.time + "] " + data.message;
+
+                events.prepend(div);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log("Monitoring disconnected.");
+        };
+    </script>
+</body>
+</html>

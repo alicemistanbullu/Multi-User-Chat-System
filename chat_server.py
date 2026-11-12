@@ -1,7 +1,7 @@
-
 import socket
 import threading
 import os
+import monitoring_service
 import time
 from datetime import datetime
 
@@ -67,6 +67,7 @@ def check_rate_limit(nickname):
             data["muted_until"] = now + 10
             write_log(f"RATE LIMIT | {nickname}")
             print(f"{nickname} muted for 10 seconds.")
+            monitoring_service.send_event("rate_limt", nickname + "muted for 10 seconds.")
             return False
 
         data["message_times"].append(now)
@@ -106,6 +107,7 @@ def handle_client(conn, addr):
                 number += 1
 
             clients[nickname] = conn
+            monitoring_service.send_event("connection", nickname + "joined chat.", users=len(clients))
 
             client_data[nickname] = {
                 "message_times": [],
@@ -167,9 +169,8 @@ def handle_client(conn, addr):
                     if target:
                         send_message(
                             target,
-                            "PRIVATE:" + nickname + ":" + private_message
-                        )
-
+                            "PRIVATE:" + nickname + ":" + private_message)
+                        monitoring_service.send_event("private", nickname + "->" + recipient + ":" + private_message, messages=monitoring_service.message_count + 1)
                         send_message(conn, "SENT:" + recipient)
 
                         write_log(
@@ -194,17 +195,20 @@ def handle_client(conn, addr):
                     broadcast("PUBLIC:" + nickname + ":" + message)
 
                     write_log(
-                        f"PUBLIC | {nickname} | {message}"
-                    )
+                        f"PUBLIC | {nickname} | {message}")
+                    monitoring_service.send_event("public", nickname + ":" + message, messages=monitoring_service.message_count + 1)
 
-    except:
-        write_log(f"ERROR | {addr[0]}")
+    except Exception as e:
+        print("CLIENT ERROR:", e)
+        write_log(f"ERROR | {addr[0]} | {e}")
 
     finally:
         if nickname:
             with lock:
                 if nickname in clients and clients[nickname] == conn:
                     del clients[nickname]
+
+                if nickname in client_data:
                     del client_data[nickname]
 
             broadcast("SYSTEM:" + nickname + " left the chat.")
@@ -216,6 +220,7 @@ def handle_client(conn, addr):
 
 
 def start_server():
+    threading.Thread(target=monitoring_service.start_monitoring, daemon=True).start()
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((HOST, PORT))
@@ -240,6 +245,7 @@ def start_server():
 
     finally:
         server.close()
+        monitoring_service.send_event("disconnection", nickname + "has left the chat.", users=len(clients))
 
 
 if __name__ == "__main__":
