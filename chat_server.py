@@ -107,7 +107,7 @@ def handle_client(conn, addr):
                 number += 1
 
             clients[nickname] = conn
-            monitoring_service.send_event("connection", nickname + "joined chat.", users=len(clients))
+            monitoring_service.send_event("connection", nickname + " joined chat.", users=len(clients))
 
             client_data[nickname] = {
                 "message_times": [],
@@ -130,9 +130,11 @@ def handle_client(conn, addr):
                 break
 
             buffer += data
+            print("RECEIVED:", repr(data))
 
             while "\n" in buffer:
                 message, buffer = buffer.split("\n", 1)
+                print("PROCESSED:", repr(message))
                 message = message.strip()
 
                 if not message:
@@ -167,9 +169,10 @@ def handle_client(conn, addr):
                         target = clients.get(recipient)
 
                     if target:
+                        timestamp = get_time()
                         send_message(
                             target,
-                            "PRIVATE:" + nickname + ":" + private_message)
+                            "PRIVATE:" + timestamp + ":" + nickname + ":" + private_message)
                         monitoring_service.send_event("private", nickname + "->" + recipient + ":" + private_message, messages=monitoring_service.message_count + 1)
                         send_message(conn, "SENT:" + recipient)
 
@@ -192,7 +195,8 @@ def handle_client(conn, addr):
                         send_message(conn, "ERROR:Rate limit exceeded. Muted for 10 seconds.")
                         continue
 
-                    broadcast("PUBLIC:" + nickname + ":" + message)
+                    timestamp = get_time()
+                    broadcast("PUBLIC:" + timestamp + ":" + nickname + ":" + message)
 
                     write_log(
                         f"PUBLIC | {nickname} | {message}")
@@ -210,6 +214,10 @@ def handle_client(conn, addr):
 
                 if nickname in client_data:
                     del client_data[nickname]
+
+                user_count = len(clients)
+
+                monitoring_service.send_event("dissconnection", nickname + " has left the chat.", users=user_count)
 
             broadcast("SYSTEM:" + nickname + " left the chat.")
             send_users()
@@ -245,7 +253,6 @@ def start_server():
 
     finally:
         server.close()
-        monitoring_service.send_event("disconnection", nickname + "has left the chat.", users=len(clients))
 
 
 if __name__ == "__main__":

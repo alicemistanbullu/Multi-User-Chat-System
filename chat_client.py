@@ -25,12 +25,12 @@ def receive_messages(client):
                     print("Connected as:", message[8:])
 
                 elif message.startswith("PUBLIC:"):
-                    parts = message.split(":", 2)
-                    print("\n" + parts[1] + ": " + parts[2])
+                    parts = message.split(":", 3)
+                    print("\n[" + parts[1].replace("_", " ").replace("-", ":", 2) + "] " + parts[2] + ":" + parts[3])
 
                 elif message.startswith("PRIVATE:"):
-                    parts = message.split(":", 2)
-                    print("\n[PRIVATE] " + parts[1] + ": " + parts[2])
+                    parts = message.split(":", 3)
+                    print("\n[PRIVATE] [" + parts[1].replace("_", " ").replace("-", ":", 2) + "] " + parts[2] + ":" + parts[3])
 
                 elif message.startswith("SYSTEM:"):
                     print("\n" + message[7:])
