@@ -16,20 +16,14 @@ loop = None
 user_count = 0
 message_count = 0
 
-
 def get_time():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    return datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
 async def broadcast(data):
     if connected:
         message = json.dumps(data)
 
-        await asyncio.gather(
-            *(ws.send(message) for ws in list(connected)),
-            return_exceptions=True
-        )
-
+        await asyncio.gather(*(ws.send(message) for ws in list(connected)), return_exceptions=True)
 
 def send_event(event_type, message, users=None, messages=None):
     global user_count, message_count
@@ -45,15 +39,10 @@ def send_event(event_type, message, users=None, messages=None):
         "message": message,
         "time": get_time(),
         "users": user_count,
-        "messages": message_count
-    }
+        "messages": message_count}
 
     if loop is not None:
-        asyncio.run_coroutine_threadsafe(
-            broadcast(data),
-            loop
-        )
-
+        asyncio.run_coroutine_threadsafe(broadcast(data), loop)
 
 async def ws_handler(websocket):
     connected.add(websocket)
@@ -61,14 +50,12 @@ async def ws_handler(websocket):
     await websocket.send(json.dumps({
         "type": "stats",
         "users": user_count,
-        "messages": message_count
-    }))
+        "messages": message_count}))
 
     try:
         await websocket.wait_closed()
     finally:
         connected.remove(websocket)
-
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -80,7 +67,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         return super().do_GET()
 
-
 def start_http_server():
     with socketserver.ThreadingTCPServer(
         ("0.0.0.0", HTTP_PORT),
@@ -88,7 +74,6 @@ def start_http_server():
     ) as server:
         print(f"HTTP server running on port {HTTP_PORT}")
         server.serve_forever()
-
 
 async def start_ws_server():
     global loop
@@ -105,13 +90,8 @@ async def start_ws_server():
 
 
 def start_monitoring():
-    threading.Thread(
-        target=start_http_server,
-        daemon=True
-    ).start()
-
+    threading.Thread(target=start_http_server, daemon=True).start()
     asyncio.run(start_ws_server())
-
 
 if __name__ == "__main__":
     start_monitoring()

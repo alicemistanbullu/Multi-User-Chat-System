@@ -16,20 +16,17 @@ os.makedirs("logs", exist_ok=True)
 
 
 def get_time():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    return datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
 def write_log(message):
     with open("logs/chat_log.txt", "a", encoding="utf-8") as file:
         file.write(f"[{get_time()}] {message}\n")
-
 
 def send_message(client, message):
     try:
         client.sendall((message + "\n").encode())
     except:
         pass
-
 
 def broadcast(message):
     with lock:
@@ -38,13 +35,11 @@ def broadcast(message):
     for client in connected:
         send_message(client, message)
 
-
 def send_users():
     with lock:
         users = list(clients.keys())
 
     broadcast("USERS:" + ",".join(users))
-
 
 def check_rate_limit(nickname):
     now = time.time()
@@ -109,10 +104,7 @@ def handle_client(conn, addr):
             clients[nickname] = conn
             monitoring_service.send_event("connection", nickname + " joined chat.", users=len(clients))
 
-            client_data[nickname] = {
-                "message_times": [],
-                "muted_until": 0
-            }
+            client_data[nickname] = {"message_times": [], "muted_until": 0}
 
         send_message(conn, "WELCOME:" + nickname)
 
@@ -130,17 +122,15 @@ def handle_client(conn, addr):
                 break
 
             buffer += data
-            print("RECEIVED:", repr(data))
 
             while "\n" in buffer:
                 message, buffer = buffer.split("\n", 1)
-                print("PROCESSED:", repr(message))
                 message = message.strip()
 
                 if not message:
                     continue
 
-                if message == "/quit":
+                if message == "/exit":
                     return
 
                 if message == "/users":
@@ -170,21 +160,14 @@ def handle_client(conn, addr):
 
                     if target:
                         timestamp = get_time()
-                        send_message(
-                            target,
-                            "PRIVATE:" + timestamp + ":" + nickname + ":" + private_message)
-                        monitoring_service.send_event("private", nickname + "->" + recipient + ":" + private_message, messages=monitoring_service.message_count + 1)
+                        send_message(target, "PRIVATE:" + timestamp + "  " + nickname + ": " + private_message)
+                        monitoring_service.send_event("private", nickname + " -> " + recipient + ": " + private_message, messages=monitoring_service.message_count + 1)
                         send_message(conn, "SENT:" + recipient)
+                        write_log(f"PRIVATE | {nickname} -> {recipient} | {private_message}")
 
-                        write_log(
-                            f"PRIVATE | {nickname} -> {recipient} | {private_message}"
-                        )
                     else:
                         send_message(conn, "ERROR:User not found")
-
-                        write_log(
-                            f"PRIVATE FAILED | {nickname} -> {recipient}"
-                        )
+                        write_log(f"PRIVATE FAILED | {nickname} -> {recipient}")
 
                 else:
                     if len(message) > 2000:
@@ -196,11 +179,9 @@ def handle_client(conn, addr):
                         continue
 
                     timestamp = get_time()
-                    broadcast("PUBLIC:" + timestamp + ":" + nickname + ":" + message)
-
-                    write_log(
-                        f"PUBLIC | {nickname} | {message}")
-                    monitoring_service.send_event("public", nickname + ":" + message, messages=monitoring_service.message_count + 1)
+                    broadcast("PUBLIC:" + timestamp + "  " + nickname + ": " + message)
+                    write_log(f"PUBLIC | {nickname} | {message}")
+                    monitoring_service.send_event("public", nickname + ": " + message, messages=monitoring_service.message_count + 1)
 
     except Exception as e:
         print("CLIENT ERROR:", e)
@@ -216,12 +197,10 @@ def handle_client(conn, addr):
                     del client_data[nickname]
 
                 user_count = len(clients)
-
                 monitoring_service.send_event("dissconnection", nickname + " has left the chat.", users=user_count)
 
             broadcast("SYSTEM:" + nickname + " left the chat.")
             send_users()
-
             write_log(f"DISCONNECTED | {nickname}")
             print(f"{nickname} dissconnected.")
         conn.close()

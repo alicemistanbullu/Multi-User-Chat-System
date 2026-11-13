@@ -1,10 +1,8 @@
-
 import socket
 import threading
 
 HOST = "127.0.0.1"
 PORT = 5000
-
 
 def receive_messages(client):
     buffer = ""
@@ -26,11 +24,11 @@ def receive_messages(client):
 
                 elif message.startswith("PUBLIC:"):
                     parts = message.split(":", 3)
-                    print("\n[" + parts[1].replace("_", " ").replace("-", ":", 2) + "] " + parts[2] + ":" + parts[3])
+                    print("\n" + parts[1] + ":" + parts[2] + ":" + parts[3])
 
                 elif message.startswith("PRIVATE:"):
                     parts = message.split(":", 3)
-                    print("\n[PRIVATE] [" + parts[1].replace("_", " ").replace("-", ":", 2) + "] " + parts[2] + ":" + parts[3])
+                    print("\n[PRIVATE] " + parts[1] + ":" + parts[2] + ":" + parts[3])
 
                 elif message.startswith("SYSTEM:"):
                     print("\n" + message[7:])
@@ -49,29 +47,22 @@ def receive_messages(client):
 
     print("\nDisconnected from server.")
 
-
 def start_client():
     nickname = input("Enter nickname: ")
-
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         client.connect((HOST, PORT))
         client.sendall((nickname + "\n").encode())
 
-        thread = threading.Thread(
-            target=receive_messages,
-            args=(client,),
-            daemon=True
-        )
-
+        thread = threading.Thread(target=receive_messages, args=(client), daemon=True)
         thread.start()
 
         while thread.is_alive():
             message = input()
 
-            if message.lower() == "/quit":
-                client.sendall(b"/quit\n")
+            if message.lower() == "/exit":
+                client.sendall(b"/exit\n")
                 break
 
             client.sendall((message + "\n").encode())
@@ -84,7 +75,6 @@ def start_client():
 
     finally:
         client.close()
-
 
 if __name__ == "__main__":
     start_client()
