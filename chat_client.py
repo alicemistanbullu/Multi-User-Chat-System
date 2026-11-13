@@ -55,7 +55,7 @@ def start_client():
         client.connect((HOST, PORT))
         client.sendall((nickname + "\n").encode())
 
-        thread = threading.Thread(target=receive_messages, args=(client), daemon=True)
+        thread = threading.Thread(target=receive_messages, args=(client,), daemon=True)
         thread.start()
 
         while thread.is_alive():

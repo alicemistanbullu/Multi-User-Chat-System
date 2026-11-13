@@ -83,8 +83,7 @@ async def start_ws_server():
     async with websockets.serve(
         ws_handler,
         "0.0.0.0",
-        WS_PORT
-    ):
+        WS_PORT):
         print(f"WebSocket server running on port {WS_PORT}")
         await asyncio.Future()
 

@@ -61,7 +61,7 @@ The server starts the following services:
 Open the following address in a web browser:
 
 ```text
-http://localhost:8000
+http://localhost:8000/monitoring.html
 ```
 
 The page displays connected users, processed messages, and live server events.
