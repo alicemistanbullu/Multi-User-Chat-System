@@ -1,201 +1,225 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chat Server Monitoring</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Monitoring Dashboard</title>
 
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            margin: 0;
             font-family: Arial, sans-serif;
-            background: #0b141a;
-            color: #e9edef;
-        }
-
-        header {
-            background: #202c33;
-            padding: 20px 30px;
-            border-bottom: 1px solid #34434d;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 23px;
-        }
-
-        header p {
-            color: #8696a0;
-            margin-bottom: 0;
-            font-size: 13px;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 30px;
         }
 
         .container {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 0 20px;
+            max-width: 1250px;
+            margin: auto;
         }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
         }
 
-        .stat-box {
-            background: #202c33;
-            padding: 22px;
-            border-radius: 12px;
-            border: 1px solid #34434d;
+        header h1 {
+            font-size: 26px;
+            color: #f8fafc;
         }
 
-        .stat-box p {
-            color: #8696a0;
-            margin: 0;
+        header p {
+            color: #94a3b8;
+            margin-top: 7px;
+            font-size: 14px;
+        }
+
+        .connection {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            background: #1e293b;
+            padding: 11px 17px;
+            border-radius: 8px;
             font-size: 13px;
         }
 
-        .stat-box h2 {
-            font-size: 32px;
-            margin: 12px 0 0;
-            color: #25d366;
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #ef4444;
         }
 
-        .chat-container {
-            background: #111b21;
-            border: 1px solid #34434d;
+        .connected {
+            background: #22c55e;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            border: 1px solid #334155;
+            border-radius: 12px;
+        }
+
+        .card-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .card-value {
+            font-size: 34px;
+            font-weight: bold;
+            color: #f8fafc;
+        }
+
+        .card-icon {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            background: #1e293b;
+            border: 1px solid #334155;
             border-radius: 12px;
             overflow: hidden;
         }
 
-        .chat-header {
-            background: #202c33;
-            padding: 17px 20px;
+        .content-header {
+            padding: 22px 25px;
+            border-bottom: 1px solid #334155;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .chat-header h2 {
+        .content-header h2 {
             font-size: 17px;
-            margin: 0;
         }
 
-        .status {
-            color: #25d366;
-            font-size: 12px;
+        .event-count {
+            color: #94a3b8;
+            font-size: 13px;
         }
 
         #events {
-            height: 520px;
+            height: 430px;
             overflow-y: auto;
-            padding: 25px;
-            background-color: #0b141a;
-            background-image: radial-gradient(#1b2a33 1px, transparent 1px);
-            background-size: 22px 22px;
+            padding: 15px 22px;
         }
 
         .event {
             display: flex;
-            margin-bottom: 15px;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #263449;
+            border-radius: 8px;
+            border-left: 4px solid #64748b;
         }
 
-        .event.public,
-        .event.private,
-        .event.error,
-        .event.rate_limit {
-            justify-content: flex-start;
+        .event-icon {
+            font-size: 18px;
         }
 
-        .bubble {
-            max-width: 75%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            background: #202c33;
-            line-height: 1.5;
+        .event-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .event-message {
+            color: #cbd5e1;
+            font-size: 13px;
             overflow-wrap: anywhere;
         }
 
-        .public .bubble {
-            background: #005c4b;
+        .event-time {
+            color: #64748b;
+            font-size: 11px;
+            white-space: nowrap;
         }
 
-        .private .bubble {
-            background: #263c53;
+        .public {
+            border-left-color: #3b82f6;
         }
 
-        .error .bubble,
-        .rate_limit .bubble {
-            background: #512b32;
+        .private {
+            border-left-color: #a78bfa;
         }
 
-        .sender {
-            font-size: 12px;
-            font-weight: bold;
-            color: #53d6b0;
-            margin-bottom: 5px;
+        .connection-event {
+            border-left-color: #22c55e;
         }
 
-        .private .sender {
-            color: #8ab4f8;
+        .disconnection {
+            border-left-color: #f59e0b;
         }
 
-        .error .sender,
-        .rate_limit .sender {
-            color: #ff8585;
+        .error {
+            border-left-color: #ef4444;
         }
 
-        .message {
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 70px 20px;
             font-size: 14px;
-            white-space: pre-wrap;
         }
 
-        .time {
-            text-align: right;
-            color: #aebac1;
-            font-size: 10px;
-            margin-top: 5px;
+        button {
+            background: #334155;
+            color: #e2e8f0;
+            border: none;
+            padding: 9px 15px;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
-        .system-event {
-            display: flex;
-            justify-content: center;
-            margin: 15px 0;
+        button:hover {
+            background: #475569;
         }
 
-        .system-event span {
-            background: #182229;
-            color: #b5c0c5;
-            font-size: 12px;
-            padding: 7px 14px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        footer {
-            text-align: center;
-            color: #667781;
-            padding: 20px;
-            font-size: 12px;
-        }
-
-        @media (max-width: 600px) {
-            .stats {
-                grid-template-columns: 1fr;
-            }
-
-            #events {
-                height: 450px;
+        @media (max-width: 750px) {
+            body {
                 padding: 15px;
             }
 
-            .bubble {
-                max-width: 90%;
+            header {
+                align-items: flex-start;
+                gap: 15px;
+                flex-direction: column;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .event {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -203,147 +227,207 @@
 
 <body>
 
+<div class="container">
+
     <header>
-        <h1>Chat Server Monitor</h1>
-        <p>Multi-User Chat System | Live Dashboard</p>
+        <div>
+            <h1>Chat Monitoring</h1>
+            <p>Real-time server activity dashboard</p>
+        </div>
+
+        <div class="connection">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="connectionText">Disconnected</span>
+        </div>
     </header>
 
-    <div class="container">
+    <section class="cards">
 
-        <div class="stats">
-
-            <div class="stat-box">
-                <p>CONNECTED USERS</p>
-                <h2 id="users">0</h2>
-            </div>
-
-            <div class="stat-box">
-                <p>PROCESSED MESSAGES</p>
-                <h2 id="messages">0</h2>
-            </div>
-
+        <div class="card">
+            <div class="card-icon">👥</div>
+            <div class="card-title">Connected Users</div>
+            <div class="card-value" id="userCount">0</div>
         </div>
 
-        <div class="chat-container">
-
-            <div class="chat-header">
-                <h2>Live Server Events</h2>
-                <span class="status" id="status">● Connecting...</span>
-            </div>
-
-            <div id="events"></div>
-
+        <div class="card">
+            <div class="card-icon">💬</div>
+            <div class="card-title">Processed Messages</div>
+            <div class="card-value" id="messageCount">0</div>
         </div>
 
-    </div>
+        <div class="card">
+            <div class="card-icon">📡</div>
+            <div class="card-title">Total Events</div>
+            <div class="card-value" id="eventCount">0</div>
+        </div>
 
-    <footer>
-        Multi-User Chat System | Server Monitoring
-    </footer>
+    </section>
 
-    <script>
-        const ws = new WebSocket("ws://" + location.hostname + ":8765");
+    <section class="content">
 
-        const users = document.getElementById("users");
-        const messages = document.getElementById("messages");
-        const events = document.getElementById("events");
-        const status = document.getElementById("status");
+        <div class="content-header">
+            <h2>Live Activity</h2>
+            <button onclick="clearEvents()">Clear Events</button>
+        </div>
 
-        ws.onopen = () => {
-            status.textContent = "● Connected";
-            status.style.color = "#25d366";
+        <div id="events">
+            <div class="empty" id="emptyMessage">
+                Waiting for server events...
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+    const eventsArea = document.getElementById("events");
+    const statusDot = document.getElementById("statusDot");
+    const connectionText = document.getElementById("connectionText");
+
+    let totalEvents = 0;
+
+    function connectWebSocket() {
+        const ws = new WebSocket(
+            "ws://" + location.hostname + ":8765"
+        );
+
+        ws.onopen = function() {
+            statusDot.classList.add("connected");
+            connectionText.textContent = "Connected";
         };
 
-        ws.onmessage = (event) => {
+        ws.onclose = function() {
+            statusDot.classList.remove("connected");
+            connectionText.textContent = "Disconnected";
+
+            setTimeout(connectWebSocket, 2000);
+        };
+
+        ws.onerror = function() {
+            ws.close();
+        };
+
+        ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
 
             if (data.users !== undefined) {
-                users.textContent = data.users;
+                document.getElementById("userCount").textContent =
+                    data.users;
             }
 
             if (data.messages !== undefined) {
-                messages.textContent = data.messages;
+                document.getElementById("messageCount").textContent =
+                    data.messages;
             }
 
-            if (data.type !== "stats") {
-                const type = data.type.toLowerCase();
-
-                const div = document.createElement("div");
-                div.className = "event";
-
-                const bubble = document.createElement("div");
-                bubble.className = "bubble";
-
-                const sender = document.createElement("div");
-                sender.className = "sender";
-
-                const message = document.createElement("div");
-                message.className = "message";
-
-                const time = document.createElement("div");
-                time.className = "time";
-
-                const content = data.message || "";
-
-                if (type === "public") {
-                    div.classList.add("public");
-                    sender.textContent = "PUBLIC MESSAGE";
-                    message.textContent = content;
-
-                } else if (type === "private") {
-                    div.classList.add("private");
-                    sender.textContent = "PRIVATE MESSAGE";
-                    message.textContent = content;
-
-                } else if (type === "connection") {
-                    div.classList.add("system-event");
-                    const info = document.createElement("span");
-                    info.textContent = "🟢 " + content;
-                    div.appendChild(info);
-
-                } else if (type === "disconnection") {
-                    div.classList.add("system-event");
-                    const info = document.createElement("span");
-                    info.textContent = "⚪ " + content;
-                    div.appendChild(info);
-
-                } else {
-                    div.classList.add("error");
-
-                    if (type === "rate_limit") {
-                        div.classList.add("rate_limit");
-                        sender.textContent = "RATE LIMIT";
-                    } else {
-                        sender.textContent = "SERVER EVENT";
-                    }
-
-                    message.textContent = content;
-                }
-
-                if (type !== "connection" && type !== "disconnection") {
-                    time.textContent = data.time || "";
-
-                    bubble.appendChild(sender);
-                    bubble.appendChild(message);
-                    bubble.appendChild(time);
-
-                    div.appendChild(bubble);
-                }
-
-                events.prepend(div);
+            if (data.type === "stats") {
+                return;
             }
-        };
 
-        ws.onclose = () => {
-            status.textContent = "● Disconnected";
-            status.style.color = "#ff6b6b";
+            addEvent(data);
         };
+    }
 
-        ws.onerror = () => {
-            status.textContent = "● Connection Error";
-            status.style.color = "#ff6b6b";
-        };
-    </script>
+    function addEvent(data) {
+        const emptyMessage = document.getElementById("emptyMessage");
+
+        if (emptyMessage) {
+            emptyMessage.remove();
+        }
+
+        totalEvents++;
+
+        document.getElementById("eventCount").textContent =
+            totalEvents;
+
+        let title = "Server Event";
+        let icon = "📌";
+        let eventClass = "";
+
+        if (data.type === "public") {
+            title = "Public Message";
+            icon = "💬";
+            eventClass = "public";
+        }
+        else if (data.type === "private") {
+            title = "Private Message";
+            icon = "✉️";
+            eventClass = "private";
+        }
+        else if (data.type === "connection") {
+            title = "User Connected";
+            icon = "🟢";
+            eventClass = "connection-event";
+        }
+        else if (
+            data.type === "disconnection" ||
+            data.type === "dissconnection"
+        ) {
+            title = "User Disconnected";
+            icon = "🟠";
+            eventClass = "disconnection";
+        }
+        else if (
+            data.type === "rate_limit" ||
+            data.type === "rate_limt"
+        ) {
+            title = "Rate Limit";
+            icon = "⚠️";
+            eventClass = "error";
+        }
+        else if (data.type === "error") {
+            title = "Server Error";
+            icon = "🔴";
+            eventClass = "error";
+        }
+
+        const eventBox = document.createElement("div");
+        eventBox.className = "event " + eventClass;
+
+        const eventIcon = document.createElement("div");
+        eventIcon.className = "event-icon";
+        eventIcon.textContent = icon;
+
+        const eventBody = document.createElement("div");
+        eventBody.className = "event-body";
+
+        const eventTitle = document.createElement("div");
+        eventTitle.className = "event-title";
+        eventTitle.textContent = title;
+
+        const eventMessage = document.createElement("div");
+        eventMessage.className = "event-message";
+        eventMessage.textContent = data.message || "";
+
+        const eventTime = document.createElement("div");
+        eventTime.className = "event-time";
+        eventTime.textContent = data.time || "";
+
+        eventBody.appendChild(eventTitle);
+        eventBody.appendChild(eventMessage);
+
+        eventBox.appendChild(eventIcon);
+        eventBox.appendChild(eventBody);
+        eventBox.appendChild(eventTime);
+
+        eventsArea.prepend(eventBox);
+
+        while (eventsArea.children.length > 100) {
+            eventsArea.removeChild(eventsArea.lastChild);
+        }
+    }
+
+    function clearEvents() {
+        eventsArea.innerHTML =
+            '<div class="empty" id="emptyMessage">Waiting for server events...</div>';
+
+        totalEvents = 0;
+        document.getElementById("eventCount").textContent = "0";
+    }
+
+    connectWebSocket();
+</script>
 
 </body>
 </html>
